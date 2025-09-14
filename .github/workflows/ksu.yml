@@ -1,0 +1,79 @@
+name: Build PIPA KSU Devices Kernel (Matrix Parallel + Release)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [pipa]
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 unzip
+
+    - name: Setup proton-clang toolchain
+      run: |
+        mkdir -p $HOME/proton-clang
+        cd $HOME/proton-clang
+        wget https://github.com/kdrag0n/proton-clang/archive/refs/tags/20210522.zip
+        unzip 20210522.zip
+        cd $GITHUB_WORKSPACE
+
+    - name: Build kernel for ${{ matrix.device }} (With KSU)
+      run: |
+        bash build.sh ${{ matrix.device }} ksu
+
+    - name: Upload flashable zips for ${{ matrix.device }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel-${{ matrix.device }}
+        path: |
+          *.zip
+
+  release:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Show collected files
+      run: ls -R dist
+
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: build-${{ steps.date.outputs.date }}
+        name: Kernel Build ${{ steps.date.outputs.date }}
+        body: |
+          自动构建的刷机内核包，基于 commit ${{ github.sha }}。
+          每个设备包含：
+          - AOSP KSU
+          - MIUI KSU
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: build-${{ steps.date.outputs.date }}
+        files: dist/**/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
