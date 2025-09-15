@@ -114,9 +114,9 @@ git clone https://github.com/kjhhyvyf/anykernel -b main --single-branch --depth=
 echo "Building for AOSP......"
 
 if [ $KSU_ENABLE -eq 1 ]; then
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig aosp.config KernelSU.config
+    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig KernelSU.config
 else
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig aosp.config
+    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
 fi
 
 make $MAKE_ARGS -j$(nproc)
