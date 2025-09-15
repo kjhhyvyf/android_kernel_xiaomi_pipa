@@ -60,26 +60,3 @@ jobs:
     - name: Get current date
       id: date
       run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: build-${{ steps.date.outputs.date }}
-        name: Kernel Build ${{ steps.date.outputs.date }}
-        body: |
-          自动构建的刷机内核包，基于 commit ${{ github.sha }}。
-          每个设备包含：
-          - AOSP NoKernelSU
-          - MIUI NoKernelSU
-          - AOSP KSU
-          - MIUI KSU
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload release assets
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: build-${{ steps.date.outputs.date }}
-        files: dist/**/*.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
