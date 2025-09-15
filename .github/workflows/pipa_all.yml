@@ -1,4 +1,4 @@
-name: Build PIPA All Devices Kernel (Matrix Parallel + Release)
+name: Build PIPA All Devices Kernel
 
 on:
   workflow_dispatch:
