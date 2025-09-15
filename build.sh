@@ -120,9 +120,9 @@ sed -i "s/${local_version_str}/${local_version_date_str}/g" arch/arm64/configs/$
 echo "Building for AOSP......"
 
 if [ $KSU_ENABLE -eq 1 ]; then
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig KernelSU.config
+    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig aosp.config KernelSU.config
 else
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
+    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig aosp.config
 fi
 
 make $MAKE_ARGS -j$(nproc)
