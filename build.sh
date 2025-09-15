@@ -149,6 +149,7 @@ fi
 
 cp out/arch/arm64/boot/Image anykernel/kernels/
 cp out/arch/arm64/boot/dtb anykernel/kernels/
+cp out/arch/arm64/boot/dtbo.img anykernel/kernels/
 
 cd anykernel 
 
@@ -305,6 +306,7 @@ fi
 
 cp out/arch/arm64/boot/Image anykernel/kernels/
 cp out/arch/arm64/boot/dtb anykernel/kernels/
+cp out/arch/arm64/boot/dtbo.img anykernel/kernels/
 
 echo "Build for MIUI finished."
 
