@@ -52,7 +52,3 @@ jobs:
 
     - name: Show collected files
       run: ls -R dist
-
-    - name: Get current date
-      id: date
-      run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
