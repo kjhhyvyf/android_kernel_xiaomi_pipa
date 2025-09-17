@@ -109,6 +109,11 @@ rm -rf anykernel/
 echo "Clone AnyKernel3 for packing kernel (repo: https://github.com/kjhhyvyf/anykernel)"
 git clone https://github.com/kjhhyvyf/anykernel -b main --single-branch --depth=1 anykernel
 
+# Add date to local version
+local_version_str="-perf"
+local_version_date_str="-$(date +%Y%m%d)-${GIT_COMMIT_ID}-perf"
+sed -i "s/${local_version_str}/${local_version_date_str}/g" arch/arm64/configs/${TARGET_DEVICE}_defconfig
+
 # ------------- Building for AOSP -------------
 
 
