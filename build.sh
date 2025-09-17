@@ -109,6 +109,74 @@ rm -rf anykernel/
 echo "Clone AnyKernel3 for packing kernel (repo: https://github.com/kjhhyvyf/anykernel)"
 git clone https://github.com/kjhhyvyf/anykernel -b main --single-branch --depth=1 anykernel
 
+# ------------- Building for AOSP -------------
+
+
+echo "Clearning [out/] and build for AOSP....."
+rm -rf out/
+
+make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
+
+if [ $KSU_ENABLE -eq 1 ]; then
+    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig KernelSU.config
+else
+    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
+fi
+
+make $MAKE_ARGS -j$(nproc)
+
+
+
+if [ -f "out/arch/arm64/boot/Image" ]; then
+    echo "The file [out/arch/arm64/boot/Image] exists. AOSP Build successfully."
+else
+    echo "The file [out/arch/arm64/boot/Image] does not exist. Seems AOSP build failed."
+    exit 1
+fi
+
+echo "Generating [out/arch/arm64/boot/dtb]......"
+find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/dtb
+
+
+# Restore modified dts
+rm -rf ${dts_source}
+mv .dts.bak ${dts_source}
+
+rm -rf anykernel/kernels/
+mkdir -p anykernel/kernels/
+
+# Patch for SukiSU KPM support. 
+if [ $KSU_ENABLE -eq 1 ]; then
+    cd out/arch/arm64/boot/
+    wget https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.12.0/patch_linux
+    chmod +x patch_linux
+    ./patch_linux
+    rm Image
+    mv oImage Image
+    cd -
+fi
+
+cp out/arch/arm64/boot/Image anykernel/kernels/
+cp out/arch/arm64/boot/dtb anykernel/kernels/
+
+echo "Build for AOSP finished."
+
+# ------------- End of Building for AOSP -------------
+#  If you don't need AOSP you can comment out the above block [Building for AOSP]
+
+
+cd anykernel 
+
+ZIP_FILENAME=Kernel_AOSP_${TARGET_DEVICE}_${KSU_ZIP_STR}_$(date +'%Y%m%d_%H%M%S')_anykernel3_${GIT_COMMIT_ID}.zip
+
+zip -r9 $ZIP_FILENAME ./* -x .git .gitignore out/ ./*.zip
+
+mv $ZIP_FILENAME ../
+
+cd ..
+
+echo "Done. The flashable zip is: [./$ZIP_FILENAME]"
+
 # ------------- Building for MIUI -------------
 
 
