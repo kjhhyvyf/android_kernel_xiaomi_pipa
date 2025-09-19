@@ -2,6 +2,8 @@ name: Build PIPA NOKSU Devices Kernel
 
 on:
   workflow_dispatch:
+  push:
+    tags: ['v*']  # 添加标签触发
 
 jobs:
   build:
@@ -34,21 +36,24 @@ jobs:
       run: |
         bash build.sh ${{ matrix.device }}
 
+    - name: List generated files
+      run: ls -la *.zip || echo "No zip files found"
+
     - name: Upload flashable zips for ${{ matrix.device }}
       uses: actions/upload-artifact@v4
       with:
-        name: kernel-${{ matrix.device }}
+        name: kernel-${{ matrix.device }}-noksu-${{ github.run_id }}
         path: |
           *.zip
+        retention-days: 30
+        if-no-files-found: error
 
-  collect:
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-
-      - name: Show collected files
-        run: ls -R dist
+    - name: Upload build logs (optional)
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs-${{ matrix.device }}-noksu
+        path: |
+          **/*.log
+          **/*.txt
+        retention-days: 7
+        if-no-files-found: ignore
