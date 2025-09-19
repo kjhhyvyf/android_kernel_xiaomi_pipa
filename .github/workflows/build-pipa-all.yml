@@ -2,6 +2,8 @@ name: Build PIPA All Devices Kernel
 
 on:
   workflow_dispatch:
+  push:
+    tags: ['v*']  # 添加标签触发，便于区分发布版本
 
 jobs:
   build:
@@ -38,21 +40,53 @@ jobs:
       run: |
         bash build.sh ${{ matrix.device }} ksu
 
+    - name: List generated files
+      run: ls -la *.zip  # 查看生成了哪些zip文件
+
     - name: Upload flashable zips for ${{ matrix.device }}
       uses: actions/upload-artifact@v4
       with:
-        name: kernel-${{ matrix.device }}
+        name: kernel-${{ matrix.device }}-${{ github.run_id }}
         path: |
           *.zip
+        retention-days: 30  # 设置产物保留30天
+        if-no-files-found: error  # 如果没有找到文件则报错
 
-  collect:
+    # 可选：上传构建日志和其他相关文件
+    - name: Upload build logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs-${{ matrix.device }}
+        path: |
+          **/*.log
+          **/*.txt
+        retention-days: 7
+        if-no-files-found: ignore  # 如果没有日志文件则忽略
+
+  # 添加一个汇总job，收集所有构建产物
+  package:
     runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: all-artifacts
 
-      - name: Show collected files
-        run: ls -R dist
+      - name: Create combined package
+        run: |
+          cd all-artifacts
+          # 创建时间戳
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          # 打包所有文件
+          zip -r kernel-builds-$TIMESTAMP.zip .
+          # 移动到最后输出目录
+          mkdir -p ../final-output
+          mv kernel-builds-$TIMESTAMP.zip ../final-output/
+
+      - name: Upload final package
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-kernel-builds
+          path: final-output/*.zip
+          retention-days: 30
