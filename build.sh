@@ -109,18 +109,22 @@ rm -rf anykernel/
 echo "Clone AnyKernel3 for packing kernel (repo: https://github.com/kjhhyvyf/anykernel)"
 git clone https://github.com/kjhhyvyf/anykernel -b main --single-branch --depth=1 anykernel
 
+# Add date to local version
+local_version_str="-perf"
+local_version_date_str="-$(date +%Y%m%d)-${GIT_COMMIT_ID}-perf"
+sed -i "s/${local_version_str}/${local_version_date_str}/g" arch/arm64/configs/${TARGET_DEVICE}_defconfig
+
 # ------------- Building for AOSP -------------
 
 
 echo "Clearning [out/] and build for AOSP....."
 rm -rf out/
 
-make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
 
 if [ $KSU_ENABLE -eq 1 ]; then
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig KernelSU.config
+make $MAKE_ARGS ${TARGET_DEVICE}_defconfig KernelSU.config
 else
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
+make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
 fi
 
 make $MAKE_ARGS -j$(nproc)
@@ -136,11 +140,6 @@ fi
 
 echo "Generating [out/arch/arm64/boot/dtb]......"
 find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/dtb
-
-
-# Restore modified dts
-rm -rf ${dts_source}
-mv .dts.bak ${dts_source}
 
 rm -rf anykernel/kernels/
 mkdir -p anykernel/kernels/
@@ -183,12 +182,10 @@ echo "Done. The flashable zip is: [./$ZIP_FILENAME]"
 echo "Clearning [out/] and build for MIUI....."
 rm -rf out/
 
-make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
-
 if [ $KSU_ENABLE -eq 1 ]; then
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig miui.config KernelSU.config
+make $MAKE_ARGS ${TARGET_DEVICE}_defconfig miui.config KernelSU.config
 else
-    make $MAKE_ARGS ${TARGET_DEVICE}_defconfig miui.config
+make $MAKE_ARGS ${TARGET_DEVICE}_defconfig miui.config
 fi
 
 make $MAKE_ARGS -j$(nproc)
@@ -204,11 +201,6 @@ fi
 
 echo "Generating [out/arch/arm64/boot/dtb]......"
 find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/dtb
-
-
-# Restore modified dts
-rm -rf ${dts_source}
-mv .dts.bak ${dts_source}
 
 rm -rf anykernel/kernels/
 mkdir -p anykernel/kernels/
