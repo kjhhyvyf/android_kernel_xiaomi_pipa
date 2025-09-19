@@ -190,9 +190,6 @@ rm -rf out/
 
 dts_source=arch/arm64/boot/dts/vendor/qcom
 
-# Backup dts
-cp -a ${dts_source} .dts.bak
-
 # Correct panel dimensions on MIUI builds
 sed -i 's/<154>/<1537>/g' ${dts_source}/dsi-panel-j1s*
 sed -i 's/<154>/<1537>/g' ${dts_source}/dsi-panel-j2*
@@ -298,11 +295,6 @@ fi
 
 echo "Generating [out/arch/arm64/boot/dtb]......"
 find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/dtb
-
-
-# Restore modified dts
-rm -rf ${dts_source}
-mv .dts.bak ${dts_source}
 
 rm -rf anykernel/kernels/
 mkdir -p anykernel/kernels/
