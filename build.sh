@@ -142,11 +142,6 @@ fi
 echo "Generating [out/arch/arm64/boot/dtb]......"
 find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/dtb
 
-
-# Restore modified dts
-rm -rf ${dts_source}
-mv .dts.bak ${dts_source}
-
 rm -rf anykernel/kernels/
 mkdir -p anykernel/kernels/
 
